@@ -6,6 +6,7 @@ package com.lwansbrough.RCTCamera;
 
 import android.content.Context;
 import android.hardware.SensorManager;
+import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -23,6 +24,7 @@ public class RCTCameraView extends ViewGroup {
     private String _captureQuality = "high";
     private int _torchMode = -1;
     private int _flashMode = -1;
+    private boolean _disableFocusFlash;
 
     public RCTCameraView(Context context) {
         super(context);
@@ -69,13 +71,18 @@ public class RCTCameraView extends ViewGroup {
             this._viewFinder.setCameraType(type);
             RCTCamera.getInstance().adjustPreviewLayout(type);
         } else {
-            _viewFinder = new RCTCameraViewFinder(_context, type);
+            _viewFinder = new RCTCameraViewFinder(_context, type, this);
             if (-1 != this._flashMode) {
+                // TODO: REMOVE
+                // TODO: ALSO REMOVE LOG DEP
+                Log.d("RCTCamera", "setCameraType calling _viewFinder.setFlashMode(" + this._flashMode + ")");
+
                 _viewFinder.setFlashMode(this._flashMode);
             }
             if (-1 != this._torchMode) {
                 _viewFinder.setFlashMode(this._torchMode);
             }
+            _viewFinder.setDisableFocusFlash(this._disableFocusFlash);
             addView(_viewFinder);
         }
     }
@@ -102,7 +109,9 @@ public class RCTCameraView extends ViewGroup {
     }
 
     public void setFlashMode(int flashMode) {
-        this._flashMode = flashMode;
+        Log.d("RCTCamera", "RCTCameraView:setFlashMode(" + flashMode + ")"); // TODO: REMOVE
+        this._flashMode = flashMode; // TODO: UNCOMMENT
+//        this._flashMode = RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF; // TODO: REMOVE
         if (this._viewFinder != null) {
             this._viewFinder.setFlashMode(flashMode);
         }
@@ -121,6 +130,13 @@ public class RCTCameraView extends ViewGroup {
 
     public void setBarCodeTypes(List<String> types) {
         RCTCamera.getInstance().setBarCodeTypes(types);
+    }
+
+    public void setDisableFocusFlash(final boolean disableFocusFlash) {
+        this._disableFocusFlash = disableFocusFlash;
+        if (this._viewFinder != null) {
+            this._viewFinder.setDisableFocusFlash(disableFocusFlash);
+        }
     }
 
     private boolean setActualDeviceOrientation(Context context) {

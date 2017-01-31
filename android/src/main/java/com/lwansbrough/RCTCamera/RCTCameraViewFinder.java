@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.os.AsyncTask;
@@ -32,6 +33,7 @@ import com.google.zxing.common.HybridBinarizer;
 
 class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceTextureListener, Camera.PreviewCallback {
     private int _cameraType;
+    private RCTCameraView _cameraView;
     private int _captureMode;
     private SurfaceTexture _surfaceTexture;
     private int _surfaceTextureWidth;
@@ -40,6 +42,8 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
     private boolean _isStopping;
     private Camera _camera;
     private float mFingerSpacing;
+    private int _flashMode;
+    private boolean _disableFocusFlash;
 
     // concurrency lock for barcode scanner to avoid flooding the runtime
     public static volatile boolean barcodeScannerTaskLock = false;
@@ -47,10 +51,11 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
     // reader instance for the barcode scanner
     private final MultiFormatReader _multiFormatReader = new MultiFormatReader();
 
-    public RCTCameraViewFinder(Context context, int type) {
+    public RCTCameraViewFinder(Context context, int type, RCTCameraView cameraView) {
         super(context);
         this.setSurfaceTextureListener(this);
         this._cameraType = type;
+        this._cameraView = cameraView;
         this.initBarcodeReader(RCTCamera.getInstance().getBarCodeTypes());
     }
 
@@ -115,7 +120,13 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
     }
 
     public void setFlashMode(int flashMode) {
+        Log.d("RCTCamera", "RCTCameraViewFinder:setFlashMode(" + flashMode + ")"); // TODO: REMOVE
         RCTCamera.getInstance().setFlashMode(_cameraType, flashMode);
+        this._flashMode = flashMode;
+    }
+
+    public void setDisableFocusFlash(final boolean disableFocusFlash) {
+        this._disableFocusFlash = disableFocusFlash;
     }
 
     private void startPreview() {
@@ -427,16 +438,59 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
                 params.setMeteringAreas(focusAreas);
             }
 
+////            // TODO: REMOVE
+//            final int existingFlashMode = this._flashMode;
+//            final boolean tempDisableFlash = (this._disableFocusFlash && this._flashMode != RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF);
+////            if (tempDisableFlash) {
+//                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+////            }
+
             // Set parameters before starting auto-focus.
             _camera.setParameters(params);
 
+            // TODO: REMOVE
+            Log.d("RCTCamera", "current camera param flash mode before temp disable:" + _camera.getParameters().getFlashMode());
+
+            // Lastly, if we are supported to disable focus flash and if flash is currently not OFF,
+            // then save the current value to return to later, and explicitly set temporarily to OFF
+            // until the (auto-)focus completes.
+            // TODO: IF AFTER _camera.setParameters above/if using this.setFlashMode, then comment on why: for additional safety checks!
+            final int existingFlashMode = this._flashMode;
+            final boolean tempDisableFlash = (this._disableFocusFlash && this._flashMode != RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF);
+            if (tempDisableFlash) {
+                Log.d("RCTCamera", "tempDisableFlash, from existingFlashMode:" + existingFlashMode); // TODO: REMOVE LOG DEP TOO
+//                this.setFlashMode(RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF);
+                _cameraView.setFlashMode(RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF);
+//                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+            } else {
+                // TODO: REMOVE
+                Log.d("RCTCamera", "no tempDisableFlash!: this._disableFocusFlash=" + this._disableFocusFlash + ", this._flashMode=" + this._flashMode + ", FLASH_MODE_OFF=" + RCTCameraModule.RCT_CAMERA_FLASH_MODE_OFF);
+            }
+
+            // TODO: REMOVE
+            Log.d("RCTCamera", "current camera param flash mode after temp disable:" + _camera.getParameters().getFlashMode());
+
+
             // Start auto-focus now that focus area has been set. If successful, then can cancel
             // it afterwards.
+            final RCTCameraViewFinder self = this;
             _camera.autoFocus(new Camera.AutoFocusCallback() {
                 @Override
                 public void onAutoFocus(boolean success, Camera camera) {
+                    // TODO: REMOVE
+                    Log.d("RCTCamera", "on autoFocus callback, have self._camera param flash mode: " + self._camera.getParameters().getFlashMode());
+                    Log.d("RCTCamera", "on autoFocus callback, have callback camera param flash mode: " + camera.getParameters().getFlashMode());
+                    Log.d("RCTCamera", "success:" + success);
+
                     if (success) {
                         camera.cancelAutoFocus();
+                    }
+
+                    // Regardless of success, return to previous flash mode if necessary now.
+                    if (tempDisableFlash) {
+                        Log.d("RCTCamera", "returning flash mode to existingFlashMode:" + existingFlashMode); // TODO: REMOVE LOG DEP TOO
+//                            self.setFlashMode(existingFlashMode);
+                        self._cameraView.setFlashMode(existingFlashMode);
                     }
                 }
             });

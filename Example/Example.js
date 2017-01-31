@@ -66,7 +66,7 @@ export default class Example extends React.Component {
         captureTarget: Camera.constants.CaptureTarget.cameraRoll,
         type: Camera.constants.Type.back,
         orientation: Camera.constants.Orientation.auto,
-        flashMode: Camera.constants.FlashMode.auto,
+        flashMode: Camera.constants.FlashMode.auto, // TODO: SET BACK TO AUTO
       },
       isRecording: false
     };

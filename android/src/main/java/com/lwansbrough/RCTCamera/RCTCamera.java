@@ -320,6 +320,7 @@ public class RCTCamera {
     }
 
     public void setFlashMode(int cameraType, int flashMode) {
+        Log.d("RCTCamera", "RCTCamera:setFlashMode(" + flashMode + ") with cameraType:" + cameraType); // TODO: REMOVE
         Camera camera = this.acquireCameraInstance(cameraType);
         if (null == camera) {
             return;

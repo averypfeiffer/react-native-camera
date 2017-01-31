@@ -1,6 +1,7 @@
 package com.lwansbrough.RCTCamera;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.uimanager.*;
@@ -57,6 +58,7 @@ public class RCTCameraViewManager extends ViewGroupManager<RCTCameraView> {
 
     @ReactProp(name = "flashMode")
     public void setFlashMode(RCTCameraView view, int flashMode) {
+        Log.d("RCTCamera", "RCTCameraViewManager: setFlashMode:" + flashMode); // TODO: REMOVE AND REMOVE LOG DEP
         view.setFlashMode(flashMode);
     }
 
@@ -85,5 +87,10 @@ public class RCTCameraViewManager extends ViewGroupManager<RCTCameraView> {
             result.add(barCodeTypes.getString(i));
         }
         view.setBarCodeTypes(result);
+    }
+
+    @ReactProp(name = "disableFocusFlash")
+    public void setDisableFocusFlash(final RCTCameraView view, final boolean disableFocusFlash) {
+        view.setDisableFocusFlash(disableFocusFlash);
     }
 }

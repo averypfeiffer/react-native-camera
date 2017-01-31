@@ -41,7 +41,7 @@ function convertNativeProps(props) {
   if (typeof props.captureMode === 'string') {
     newProps.captureMode = Camera.constants.CaptureMode[props.captureMode];
   }
-  
+
   if (typeof props.captureTarget === 'string') {
     newProps.captureTarget = Camera.constants.CaptureTarget[props.captureTarget];
   }
@@ -98,6 +98,7 @@ export default class Camera extends Component {
     onBarCodeRead: PropTypes.func,
     barcodeScannerEnabled: PropTypes.bool,
     onFocusChanged: PropTypes.func,
+    disableFocusFlash: PropTypes.bool,
     onZoomChanged: PropTypes.func,
     mirrorImage: PropTypes.bool,
     barCodeTypes: PropTypes.array,
@@ -130,6 +131,7 @@ export default class Camera extends Component {
     torchMode: CameraManager.TorchMode.off,
     mirrorImage: false,
     barCodeTypes: Object.values(CameraManager.BarCodeType),
+    disableFocusFlash: true,
   };
 
   static checkDeviceAuthorizationStatus = CameraManager.checkDeviceAuthorizationStatus;
@@ -197,6 +199,9 @@ export default class Camera extends Component {
     const style = [styles.base, this.props.style];
     const nativeProps = convertNativeProps(this.props);
 
+    // TODO: REMOVE
+    console.log(`render: nativeProps.disableFocusFlash = ${nativeProps.disableFocusFlash}`);
+
     return <RCTCamera ref={CAMERA_REF} {...nativeProps} />;
   }
 
@@ -219,6 +224,7 @@ export default class Camera extends Component {
       title: '',
       description: '',
       mirrorImage: props.mirrorImage,
+      // disableFocusFlash: props.disableFocusFlash,
       ...options
     };
 
