@@ -914,12 +914,14 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 
 - (void)subjectAreaDidChange:(NSNotification *)notification
 {
+    NSLog(@"subjectAreaDidChange, setting continuous auto-focus on center");
   CGPoint devicePoint = CGPointMake(.5, .5);
   [self focusWithMode:AVCaptureFocusModeContinuousAutoFocus exposeWithMode:AVCaptureExposureModeContinuousAutoExposure atDevicePoint:devicePoint monitorSubjectAreaChange:NO];
 }
 
 - (void)focusWithMode:(AVCaptureFocusMode)focusMode exposeWithMode:(AVCaptureExposureMode)exposureMode atDevicePoint:(CGPoint)point monitorSubjectAreaChange:(BOOL)monitorSubjectAreaChange
 {
+    NSLog(@"focusWithMode");
   dispatch_async([self sessionQueue], ^{
     AVCaptureDevice *device = [[self videoCaptureDeviceInput] device];
     NSError *error = nil;
@@ -947,6 +949,7 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 
 - (void)focusAtThePoint:(CGPoint) atPoint;
 {
+    NSLog(@"focusAtThePoint starting with point: %@", atPoint);
     Class captureDeviceClass = NSClassFromString(@"AVCaptureDevice");
     if (captureDeviceClass != nil) {
         dispatch_async([self sessionQueue], ^{
@@ -961,10 +964,12 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
                 if([device lockForConfiguration:nil]) {
                     [device setFocusPointOfInterest:CGPointMake(focus_x,focus_y)];
                     [device setFocusMode:AVCaptureFocusModeAutoFocus];
+                    // TODO: Try setExposurePointOfInterest here too?
                     if ([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]){
                         [device setExposureMode:AVCaptureExposureModeAutoExpose];
                     }
                     [device unlockForConfiguration];
+                    NSLog(@"focusAtThePoint: finished with transformed point: (%0.2f, %0.2f)", focus_x, focus_y);
                 }
             }
         });
