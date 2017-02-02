@@ -949,25 +949,32 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 
 - (void)focusAtThePoint:(CGPoint) atPoint;
 {
-    NSLog(@"focusAtThePoint starting with point: %@", atPoint);
+    NSLog(@"focusAtThePoint starting with point: (%0.2f, %0.2f)", atPoint.x, atPoint.y);
     Class captureDeviceClass = NSClassFromString(@"AVCaptureDevice");
     if (captureDeviceClass != nil) {
         dispatch_async([self sessionQueue], ^{
             AVCaptureDevice *device = [[self videoCaptureDeviceInput] device];
             if([device isFocusPointOfInterestSupported] &&
                [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
-                CGRect screenRect = [[UIScreen mainScreen] bounds];
+                // TODO: Rename screenRect -> cameraViewRect everywhere if this works
+//                CGRect screenRect = [[UIScreen mainScreen] bounds];
+                CGRect screenRect = [[self camera] bounds];
                 double screenWidth = screenRect.size.width;
                 double screenHeight = screenRect.size.height;
                 double focus_x = atPoint.x/screenWidth;
                 double focus_y = atPoint.y/screenHeight;
+                CGPoint cameraViewPoint = CGPointMake(focus_x, focus_y);
                 if([device lockForConfiguration:nil]) {
-                    [device setFocusPointOfInterest:CGPointMake(focus_x,focus_y)];
+                    [device setFocusPointOfInterest:cameraViewPoint];
                     [device setFocusMode:AVCaptureFocusModeAutoFocus];
                     // TODO: Try setExposurePointOfInterest here too?
-                    if ([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]){
+                    if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
                         [device setExposureMode:AVCaptureExposureModeAutoExpose];
+                        [device setExposurePointOfInterest:cameraViewPoint];
                     }
+//                    if ([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]){
+//                        [device setExposureMode:AVCaptureExposureModeAutoExpose];
+//                    }
                     [device unlockForConfiguration];
                     NSLog(@"focusAtThePoint: finished with transformed point: (%0.2f, %0.2f)", focus_x, focus_y);
                 }
