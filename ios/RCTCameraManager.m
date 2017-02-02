@@ -914,14 +914,12 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 
 - (void)subjectAreaDidChange:(NSNotification *)notification
 {
-    NSLog(@"subjectAreaDidChange, setting continuous auto-focus on center");
-//  CGPoint devicePoint = CGPointMake(.5, .5);
-//  [self focusWithMode:AVCaptureFocusModeContinuousAutoFocus exposeWithMode:AVCaptureExposureModeContinuousAutoExposure atDevicePoint:devicePoint monitorSubjectAreaChange:NO];
+  CGPoint devicePoint = CGPointMake(.5, .5);
+  [self focusWithMode:AVCaptureFocusModeContinuousAutoFocus exposeWithMode:AVCaptureExposureModeContinuousAutoExposure atDevicePoint:devicePoint monitorSubjectAreaChange:NO];
 }
 
 - (void)focusWithMode:(AVCaptureFocusMode)focusMode exposeWithMode:(AVCaptureExposureMode)exposureMode atDevicePoint:(CGPoint)point monitorSubjectAreaChange:(BOOL)monitorSubjectAreaChange
 {
-    NSLog(@"focusWithMode");
   dispatch_async([self sessionQueue], ^{
     AVCaptureDevice *device = [[self videoCaptureDeviceInput] device];
     NSError *error = nil;
@@ -949,30 +947,26 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 
 - (void)focusAtThePoint:(CGPoint) atPoint;
 {
-    NSLog(@"focusAtThePoint starting with point: (%0.2f, %0.2f)", atPoint.x, atPoint.y);
     Class captureDeviceClass = NSClassFromString(@"AVCaptureDevice");
     if (captureDeviceClass != nil) {
         dispatch_async([self sessionQueue], ^{
             AVCaptureDevice *device = [[self videoCaptureDeviceInput] device];
             if([device isFocusPointOfInterestSupported] &&
                [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
-                // TODO: Rename screenRect -> cameraViewRect everywhere if this works
-//                CGRect screenRect = [[UIScreen mainScreen] bounds];
-                CGRect screenRect = [[self camera] bounds];
-                double screenWidth = screenRect.size.width;
-                double screenHeight = screenRect.size.height;
-                double focus_x = atPoint.x/screenWidth;
-                double focus_y = atPoint.y/screenHeight;
+                CGRect cameraViewRect = [[self camera] bounds];
+                double cameraViewWidth = cameraViewRect.size.width;
+                double cameraViewHeight = cameraViewRect.size.height;
+                double focus_x = atPoint.x/cameraViewWidth;
+                double focus_y = atPoint.y/cameraViewHeight;
                 CGPoint cameraViewPoint = CGPointMake(focus_x, focus_y);
                 if([device lockForConfiguration:nil]) {
                     [device setFocusPointOfInterest:cameraViewPoint];
                     [device setFocusMode:AVCaptureFocusModeAutoFocus];
-//                    if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
-//                        [device setExposureMode:AVCaptureExposureModeAutoExpose];
-//                        [device setExposurePointOfInterest:cameraViewPoint];
-//                    }
+                    if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+                        [device setExposureMode:AVCaptureExposureModeAutoExpose];
+                        [device setExposurePointOfInterest:cameraViewPoint];
+                    }
                     [device unlockForConfiguration];
-                    NSLog(@"focusAtThePoint: finished with transformed point: (%0.2f, %0.2f)", focus_x, focus_y);
                 }
             }
         });

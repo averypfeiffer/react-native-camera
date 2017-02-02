@@ -184,7 +184,7 @@ export default class Example extends React.Component {
           flashMode={this.state.camera.flashMode}
           onFocusChanged={() => {}}
           onZoomChanged={() => {}}
-          defaultTouchToFocus={true}
+          defaultTouchToFocus
           mirrorImage={false}
         />
         <View style={[styles.overlay, styles.topOverlay]}>
