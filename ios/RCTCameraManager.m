@@ -915,8 +915,8 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 - (void)subjectAreaDidChange:(NSNotification *)notification
 {
     NSLog(@"subjectAreaDidChange, setting continuous auto-focus on center");
-  CGPoint devicePoint = CGPointMake(.5, .5);
-  [self focusWithMode:AVCaptureFocusModeContinuousAutoFocus exposeWithMode:AVCaptureExposureModeContinuousAutoExposure atDevicePoint:devicePoint monitorSubjectAreaChange:NO];
+//  CGPoint devicePoint = CGPointMake(.5, .5);
+//  [self focusWithMode:AVCaptureFocusModeContinuousAutoFocus exposeWithMode:AVCaptureExposureModeContinuousAutoExposure atDevicePoint:devicePoint monitorSubjectAreaChange:NO];
 }
 
 - (void)focusWithMode:(AVCaptureFocusMode)focusMode exposeWithMode:(AVCaptureExposureMode)exposureMode atDevicePoint:(CGPoint)point monitorSubjectAreaChange:(BOOL)monitorSubjectAreaChange
@@ -967,13 +967,9 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
                 if([device lockForConfiguration:nil]) {
                     [device setFocusPointOfInterest:cameraViewPoint];
                     [device setFocusMode:AVCaptureFocusModeAutoFocus];
-                    // TODO: Try setExposurePointOfInterest here too?
-                    if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
-                        [device setExposureMode:AVCaptureExposureModeAutoExpose];
-                        [device setExposurePointOfInterest:cameraViewPoint];
-                    }
-//                    if ([device isExposureModeSupported:AVCaptureExposureModeAutoExpose]){
+//                    if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
 //                        [device setExposureMode:AVCaptureExposureModeAutoExpose];
+//                        [device setExposurePointOfInterest:cameraViewPoint];
 //                    }
                     [device unlockForConfiguration];
                     NSLog(@"focusAtThePoint: finished with transformed point: (%0.2f, %0.2f)", focus_x, focus_y);
