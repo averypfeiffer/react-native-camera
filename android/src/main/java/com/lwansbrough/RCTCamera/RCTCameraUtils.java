@@ -2,12 +2,21 @@ package com.lwansbrough.RCTCamera;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 
 import java.util.ArrayList;
 
 public class RCTCameraUtils {
+
+    private static AudioManager sAudioManagerSingleton;
+    private static AudioManager getAudioManagerSingleton(final ReactApplicationContext reactApplicationContext) {
+        if (sAudioManagerSingleton == null) {
+            sAudioManagerSingleton = (AudioManager) reactApplicationContext.getSystemService(Context.AUDIO_SERVICE);
+        }
+        return sAudioManagerSingleton;
+    }
 
     /**
      * List of system sound stream ids that should be muted for record start/stop, when
@@ -23,6 +32,10 @@ public class RCTCameraUtils {
             AudioManager.STREAM_SYSTEM,
             AudioManager.STREAM_RING,
             AudioManager.STREAM_NOTIFICATION,
+            AudioManager.STREAM_ALARM,
+//            AudioManager.STREAM_DTMF,
+//            AudioManager.STREAM_VOICE_CALL,
+            AudioManager.STREAM_MUSIC,
     };
 
     /**
@@ -36,8 +49,12 @@ public class RCTCameraUtils {
      * we will be mangling system sound settings and not returning them back to the way they were!
      */
     public static ArrayList<StreamIdRestoreVolume> saveAndMuteSystemSoundsForRecordStartStop(final ReactApplicationContext reactApplicationContext) {
-        // Get audio manager from context.
-        final AudioManager audioManager = (AudioManager) reactApplicationContext.getSystemService(Context.AUDIO_SERVICE);
+        // Get audio manager.
+        final AudioManager audioManager = getAudioManagerSingleton(reactApplicationContext);
+//        final AudioManager audioManager = (AudioManager) reactApplicationContext.getSystemService(Context.AUDIO_SERVICE);
+
+        // TODO: REMOVE
+        Log.d("RCTCamera", "isVolumeFixed:" + audioManager.isVolumeFixed());
 
         // Init list of StreamIdRestoreVolume objects for restoring later.
         final ArrayList<StreamIdRestoreVolume> streamIdRestoreVolumes = new ArrayList<StreamIdRestoreVolume>();
@@ -55,7 +72,11 @@ public class RCTCameraUtils {
                 audioManager.setStreamMute(streamId, true);
             } else {
                 audioManager.adjustStreamVolume(streamId, AudioManager.ADJUST_MUTE, 0);
+//                audioManager.setStreamVolume(streamId, AudioManager.ADJUST_MUTE, 0);
             }
+
+            // TODO: REMOVE - AND REMOVE LOG DEP
+            Log.d("RCTCamera", "muted streamId:" + streamId);
         }
 
         // Return list of StreamIdToRestoreVolume objects.
@@ -75,12 +96,17 @@ public class RCTCameraUtils {
             return;
         }
 
-        // Get audio manager from context.
-        final AudioManager audioManager = (AudioManager) reactApplicationContext.getSystemService(Context.AUDIO_SERVICE);
+        // Get audio manager.
+        final AudioManager audioManager = getAudioManagerSingleton(reactApplicationContext);
+//        final AudioManager audioManager = (AudioManager) reactApplicationContext.getSystemService(Context.AUDIO_SERVICE);
 
         // Restore stream volume by id.
         for (StreamIdRestoreVolume streamIdRestoreVolume : streamIdRestoreVolumes) {
+            audioManager.adjustStreamVolume(streamIdRestoreVolume.streamId, AudioManager.ADJUST_UNMUTE, 0);
             audioManager.setStreamVolume(streamIdRestoreVolume.streamId, streamIdRestoreVolume.restoreVolume, 0);
+
+            // TODO: REMOVE - AND REMOVE LOG DEP
+            Log.d("RCTCamera", "unmuted streamId:" + streamIdRestoreVolume.streamId);
         }
     }
 

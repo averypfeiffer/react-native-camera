@@ -184,6 +184,7 @@ export default class Example extends React.Component {
           flashMode={this.state.camera.flashMode}
           defaultTouchToFocus
           mirrorImage={false}
+          playSoundOnCapture={false}
         />
         <View style={[styles.overlay, styles.topOverlay]}>
           <TouchableOpacity

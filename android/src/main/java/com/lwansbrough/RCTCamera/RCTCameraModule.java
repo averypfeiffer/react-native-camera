@@ -385,10 +385,10 @@ public class RCTCameraModule extends ReactContextBaseJavaModule
             promise.reject(ex);
         }
 
-        // Re-enable sounds if applicable.
-        if (!mPlaySoundOnCapture && mStreamIdRestoreVolumes != null) {
-            RCTCameraUtils.restoreSystemSoundsAfterRecordStartStop(mStreamIdRestoreVolumes, _reactContext);
-        }
+//        // Re-enable sounds if applicable.
+//        if (!mPlaySoundOnCapture && mStreamIdRestoreVolumes != null) {
+//            RCTCameraUtils.restoreSystemSoundsAfterRecordStartStop(mStreamIdRestoreVolumes, _reactContext);
+//        }
     }
 
     /**
