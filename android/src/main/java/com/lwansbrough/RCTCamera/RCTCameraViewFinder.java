@@ -187,9 +187,9 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
     /**
      * Parse barcodes as BarcodeFormat constants.
      *
-     * Supports all iOS codes except [code138, code39mod43, itf14]
+     * Supports all iOS codes except [code39mod43, itf14]
      *
-     * Additionally supports [codabar, code128, maxicode, rss14, rssexpanded, upca, upceanextension]
+     * Additionally supports [codabar, maxicode, rss14, rssexpanded, upca, upceanextension]
      */
     private BarcodeFormat parseBarCodeString(String c) {
         if ("aztec".equals(c)) {
@@ -275,50 +275,61 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
             this.imageData = imageData;
         }
 
-        @Override
-        protected Void doInBackground(Void... ignored) {
-            if (isCancelled()) {
-                return null;
-            }
+@Override
+    protected Void doInBackground(Void... ignored) {
+        if (isCancelled()) {
+            return null;
+        }
 
-            Camera.Size size = camera.getParameters().getPreviewSize();
+        Camera.Size size = camera.getParameters().getPreviewSize();
 
-            int width = size.width;
-            int height = size.height;
+        int width = size.width;
+        int height = size.height;
 
-            // rotate for zxing if orientation is portrait
-            if (RCTCamera.getInstance().getActualDeviceOrientation() == 0) {
-              byte[] rotated = new byte[imageData.length];
-              for (int y = 0; y < height; y++) {
+
+
+        // rotate for zxing if orientation is portrait
+        if (RCTCamera.getInstance().getActualDeviceOrientation() == 0) {
+            byte[] rotated = new byte[imageData.length];
+            for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
-                  rotated[x * height + height - y - 1] = imageData[x + y * width];
+                    rotated[x * height + height - y - 1] = imageData[x + y * width];
                 }
-              }
-              width = size.height;
-              height = size.width;
-              imageData = rotated;
             }
+            width = size.height;
+            height = size.width;
+            imageData = rotated;
+        }
 
-            try {
-                PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(imageData, width, height, 0, 0, width, height, false);
-                BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                Result result = _multiFormatReader.decodeWithState(bitmap);
+        try {
 
-                ReactContext reactContext = RCTCameraModule.getReactContextSingleton();
-                WritableMap event = Arguments.createMap();
-                event.putString("data", result.getText());
-                event.putString("type", result.getBarcodeFormat().toString());
-                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("CameraBarCodeReadAndroid", event);
+            int cropHeight = 50;
+            int cropWidth = width;
+            //lets make it half the height (center) minus the crop height
+            int cropTopOffset = ((height / 2) - (cropHeight / 2));
+            int cropLeftOffset = 0;
 
-            } catch (Throwable t) {
-                // meh
-            } finally {
-                _multiFormatReader.reset();
-                RCTCameraViewFinder.barcodeScannerTaskLock = false;
-                return null;
-            }
+            PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(imageData, width, height, 0, 0, width, height, false);
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+            bitmap = bitmap.crop(0, cropTopOffset, cropWidth, cropHeight);
+
+            Result result = _multiFormatReader.decodeWithState(bitmap);
+
+            ReactContext reactContext = RCTCameraModule.getReactContextSingleton();
+            WritableMap event = Arguments.createMap();
+            event.putString("data", result.getText());
+            event.putString("type", result.getBarcodeFormat().toString());
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("CameraBarCodeReadAndroid", event);
+
+        } catch (Throwable t) {
+            // meh
+        } finally {
+            _multiFormatReader.reset();
+            RCTCameraViewFinder.barcodeScannerTaskLock = false;
+            return null;
         }
     }
+}
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
